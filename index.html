@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>ASB Solutions - Universal AI Studio</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0c29; color: white; text-align: center; margin: 0; padding: 20px; }
+        .container { background: #24243e; padding: 30px; border-radius: 20px; display: inline-block; width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .section { background: #302b63; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; }
+        label { font-weight: bold; color: #add8e6; display: block; margin-bottom: 5px; }
+        input, select, button, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; box-sizing: border-box; }
+        button { background: #ff0055; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #ff2e63; transform: scale(1.02); }
+        .hidden { display: none; }
+        video { width: 100%; margin-top: 20px; border-radius: 10px; display: none; border: 2px solid #ff0055; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 style="color: #ff0055;">ASB AI Character Studio 🚀</h2>
+        
+        <div class="section">
+            <label>1. Apni Photo Chuniye (Aloo, Pyaaj ya Insaan):</label>
+            <input type="file" id="userImg" accept="image/*">
+        </div>
+
+        <div class="section">
+            <label><input type="checkbox" id="removeBG" onchange="toggleBGOptions()"> Background Badlein?</label>
+            
+            <div id="bgOptions" class="hidden">
+                <label>Naya Background Chuniye:</label>
+                <select id="presetBG" onchange="toggleCustomBG()">
+                    <option value="none">-- Preset Backgrounds --</option>
+                    <option value="news_studio">News Studio</option>
+                    <option value="office">Professional Office</option>
+                    <option value="green_screen">Green Screen</option>
+                    <option value="custom">-- Apni Photo Upload Karein --</option>
+                </select>
+                
+                <div id="customBGSection" class="hidden">
+                    <label>Apni Background Photo Upload Karein:</label>
+                    <input type="file" id="customBGFile" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <label>2. Apni Aawaz Upload Karein (.mp3):</label>
+            <input type="file" id="userAudio" accept="audio/*">
+        </div>
+
+        <button id="genBtn" onclick="startGeneration()">AI Reel Generate Karein 🎬</button>
+        
+        <p id="status" style="color: #f8b400;"></p>
+        <video id="outputVideo" controls></video>
+    </div>
+
+    <script>
+        function toggleBGOptions() {
+            const isChecked = document.getElementById('removeBG').checked;
+            document.getElementById('bgOptions').classList.toggle('hidden', !isChecked);
+        }
+
+        function toggleCustomBG() {
+            const choice = document.getElementById('presetBG').value;
+            document.getElementById('customBGSection').classList.toggle('hidden', choice !== 'custom');
+        }
+
+        async function startGeneration() {
+            const btn = document.getElementById('genBtn');
+            const status = document.getElementById('status');
+            const video = document.getElementById('outputVideo');
+            
+            const img = document.getElementById('userImg').files[0];
+            if(!img) { alert("Photo toh daalo bhai!"); return; }
+
+            status.innerText = "AI Processor chalu hai... (1-2 min rukiye)";
+            btn.disabled = true;
+
+            let formData = new FormData();
+            formData.append('image', img);
+            formData.append('remove_bg', document.getElementById('removeBG').checked);
+            formData.append('bg_preset', document.getElementById('presetBG').value);
+            
+            const customBG = document.getElementById('customBGFile').files[0];
+            if(customBG) formData.append('bg_custom', customBG);
+
+            const audio = document.getElementById('userAudio').files[0];
+            if(audio) formData.append('audio', audio);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/process', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if(result.status === "Success") {
+                    status.innerText = "Mubarak ho! Video taiyar hai.";
+                    video.src = result.video_url;
+                    video.style.display = "block";
+                } else {
+                    status.innerText = "Error: " + result.message;
+                }
+            } catch (e) {
+                status.innerText = "Backend band hai! CMD check karein.";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
