@@ -1,6 +1,12 @@
 flask
 flask-cors
 replicate
+rembgflask
+flask-cors
+replicate
 rembg
+pillow
+requests
+gunicorn
 pillow
 requests
